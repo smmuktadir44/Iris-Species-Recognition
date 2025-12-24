@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iris Species Identifier</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '🌸';
+            position: absolute;
+            font-size: 150px;
+            opacity: 0.1;
+            top: -20px;
+            right: 50px;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            padding: 40px;
+        }
+
+        .input-section {
+            background: white;
+            padding: 35px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .input-section h2 {
+            color: #667eea;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1em;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .unit {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .slider-group {
+            margin-top: 10px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            background: #e0e0e0;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-identify {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-identify:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-identify:active {
+            transform: translateY(0);
+        }
+
+        .result-section {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .species-card {
+            background: white;
+            padding: 35px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .species-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .species-icon {
+            font-size: 5em;
+            margin: 20px 0;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .species-name {
+            font-size: 2.5em;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .species-scientific {
+            font-size: 1.3em;
+            color: #764ba2;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+
+        .confidence-bar {
+            background: #e0e0e0;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            transition: width 1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .probabilities {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .probabilities h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+        }
+
+        .prob-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .prob-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .prob-species {
+            flex: 1;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .prob-bar-container {
+            flex: 2;
+            height: 25px;
+            background: #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 0 15px;
+        }
+
+        .prob-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            transition: width 0.8s ease;
+        }
+
+        .prob-value {
+            font-weight: 600;
+            color: #667eea;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .features-display {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .features-display h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .feature-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .feature-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .feature-value {
+            font-size: 1.5em;
+            color: #333;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .feature-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .species-name {
+                font-size: 2em;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌸 Iris Species Identifier</h1>
+            <p>Enter flower measurements to identify the iris species</p>
+        </div>
+
+        <div class="content">
+            <div class="input-section">
+                <h2>📏 Flower Measurements</h2>
+                
+                <div class="form-group">
+                    <label for="sepal-length">Sepal Length</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="sepal-length" step="0.1" min="4" max="8" value="5.8" oninput="updateSlider('sepal-length')">
+                        <span class="unit">cm</span>
+                    </div>
+                    <div class="slider-group">
+                        <input type="range" id="sepal-length-slider" min="4" max="8" step="0.1" value="5.8" oninput="updateInput('sepal-length')">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="sepal-width">Sepal Width</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="sepal-width" step="0.1" min="2" max="5" value="3.0" oninput="updateSlider('sepal-width')">
+                        <span class="unit">cm</span>
+                    </div>
+                    <div class="slider-group">
+                        <input type="range" id="sepal-width-slider" min="2" max="5" step="0.1" value="3.0" oninput="updateInput('sepal-width')">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="petal-length">Petal Length</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="petal-length" step="0.1" min="1" max="7" value="4.4" oninput="updateSlider('petal-length')">
+                        <span class="unit">cm</span>
+                    </div>
+                    <div class="slider-group">
+                        <input type="range" id="petal-length-slider" min="1" max="7" step="0.1" value="4.4" oninput="updateInput('petal-length')">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="petal-width">Petal Width</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="petal-width" step="0.1" min="0.1" max="3" value="1.3" oninput="updateSlider('petal-width')">
+                        <span class="unit">cm</span>
+                    </div>
+                    <div class="slider-group">
+                        <input type="range" id="petal-width-slider" min="0.1" max="3" step="0.1" value="1.3" oninput="updateInput('petal-width')">
+                    </div>
+                </div>
+
+                <button class="btn-identify" onclick="identifySpecies()">🔍 Identify Species</button>
+            </div>
+
+            <div class="result-section">
+                <div class="species-card">
+                    <div class="species-icon" id="species-icon">🌺</div>
+                    <div class="species-name" id="species-name">Iris Versicolor</div>
+                    <div class="species-scientific" id="species-scientific">Iris versicolor</div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" id="confidence-fill" style="width: 85%;">
+                            <span id="confidence-text">85% Confident</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="probabilities">
+                    <h3>📊 Classification Probabilities</h3>
+                    <div class="prob-item">
+                        <div class="prob-species">
+                            <span>🌺</span>
+                            <span>Versicolor</span>
+                        </div>
+                        <div class="prob-bar-container">
+                            <div class="prob-bar-fill" id="prob-versicolor" style="width: 85%;"></div>
+                        </div>
+                        <div class="prob-value" id="prob-versicolor-text">85%</div>
+                    </div>
+                    <div class="prob-item">
+                        <div class="prob-species">
+                            <span>🌸</span>
+                            <span>Virginica</span>
+                        </div>
+                        <div class="prob-bar-container">
+                            <div class="prob-bar-fill" id="prob-virginica" style="width: 10%;"></div>
+                        </div>
+                        <div class="prob-value" id="prob-virginica-text">10%</div>
+                    </div>
+                    <div class="prob-item">
+                        <div class="prob-species">
+                            <span>🌼</span>
+                            <span>Setosa</span>
+                        </div>
+                        <div class="prob-bar-container">
+                            <div class="prob-bar-fill" id="prob-setosa" style="width: 5%;"></div>
+                        </div>
+                        <div class="prob-value" id="prob-setosa-text">5%</div>
+                    </div>
+                </div>
+
+                <div class="features-display">
+                    <h3>🔢 Input Features</h3>
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <div class="feature-label">Sepal Length</div>
+                            <div class="feature-value" id="display-sepal-length">5.8 cm</div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-label">Sepal Width</div>
+                            <div class="feature-value" id="display-sepal-width">3.0 cm</div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-label">Petal Length</div>
+                            <div class="feature-value" id="display-petal-length">4.4 cm</div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-label">Petal Width</div>
+                            <div class="feature-value" id="display-petal-width">1.3 cm</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    function updateSlider(fieldName) {
+        const input = document.getElementById(fieldName);
+        const slider = document.getElementById(fieldName + '-slider');
+        slider.value = input.value;
+    }
+
+    function updateInput(fieldName) {
+        const input = document.getElementById(fieldName);
+        const slider = document.getElementById(fieldName + '-slider');
+        input.value = slider.value;
+    }
+
+    async function identifySpecies() {
+        const sepalLength = parseFloat(document.getElementById('sepal-length').value);
+        const sepalWidth  = parseFloat(document.getElementById('sepal-width').value);
+        const petalLength = parseFloat(document.getElementById('petal-length').value);
+        const petalWidth  = parseFloat(document.getElementById('petal-width').value);
+
+        // Update feature display
+        document.getElementById('display-sepal-length').textContent = sepalLength.toFixed(1) + ' cm';
+        document.getElementById('display-sepal-width').textContent  = sepalWidth.toFixed(1) + ' cm';
+        document.getElementById('display-petal-length').textContent = petalLength.toFixed(1) + ' cm';
+        document.getElementById('display-petal-width').textContent  = petalWidth.toFixed(1) + ' cm';
+
+        const payload = {
+            sepal_length: sepalLength,
+            sepal_width: sepalWidth,
+            petal_length: petalLength,
+            petal_width: petalWidth
+        };
+
+        try {
+            const response = await fetch("/predict", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            const species = data.species;
+            const confidence = data.confidence;
+            const probs = data.probabilities;
+
+            // Icon + scientific name mapping
+            const meta = {
+                "Setosa":     { icon: "🌼", sci: "Iris setosa" },
+                "Versicolor": { icon: "🌺", sci: "Iris versicolor" },
+                "Virginica":  { icon: "🌸", sci: "Iris virginica" }
+            };
+
+            document.getElementById('species-name').textContent = "Iris " + species;
+            document.getElementById('species-scientific').textContent = meta[species].sci;
+            document.getElementById('species-icon').textContent = meta[species].icon;
+
+            // Confidence bar
+            document.getElementById('confidence-fill').style.width = confidence + "%";
+            document.getElementById('confidence-text').textContent = confidence + "% Confident";
+
+            // Probabilities
+            document.getElementById('prob-setosa').style.width = probs.setosa + "%";
+            document.getElementById('prob-setosa-text').textContent = probs.setosa + "%";
+
+            document.getElementById('prob-versicolor').style.width = probs.versicolor + "%";
+            document.getElementById('prob-versicolor-text').textContent = probs.versicolor + "%";
+
+            document.getElementById('prob-virginica').style.width = probs.virginica + "%";
+            document.getElementById('prob-virginica-text').textContent = probs.virginica + "%";
+
+        } catch (err) {
+            alert("Prediction failed: " + err.message);
+        }
+    }
+
+    // Initial prediction on load
+    identifySpecies();
+</script>
+
+</body>
+</html>
